@@ -82,11 +82,11 @@
         {
             try
             {
-                _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/slider-init.js");
+                _module = await JSRuntime.InvokeAsync<IJSObjectReference>(identifier: "import", "./js/slider-init.js");
                 _isJsReady = true;
 
                 if (_module is not null)
-                    await _module.InvokeVoidAsync("initCarousel", "#heroCarousel");
+                    await _module.InvokeVoidAsync(identifier: "initCarousel", "#heroCarousel");
             }
             catch (InvalidOperationException)
             {

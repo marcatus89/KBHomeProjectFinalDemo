@@ -773,11 +773,22 @@ private string? infoLastUpdatedEmail;
 
     // ---------- Image modal ----------
     private void ShowImage(Product product)
+{
+    modalProductName = product.Name;
+
+    if (string.IsNullOrWhiteSpace(product.ImageUrl))
     {
-        modalProductName = product.Name;
-        modalImageUrl = product.ImageUrl ?? "/images/no-image.png";
-        showImageModal = true;
+        ToastSvc.ShowToast("⚠️ Sản phẩm này chưa có hình ảnh!", ToastLevel.Warning);
+        modalImageUrl = "/images/no-image.png";
     }
+    else
+    {
+        modalImageUrl = product.ImageUrl;
+    }
+
+    showImageModal = true;
+}
+
     private void CloseImageModal() => showImageModal = false;
 
     // ---------- Incoming modal ----------
@@ -1034,7 +1045,7 @@ private string? infoLastUpdatedEmail;
         ToastSvc.ShowToast("Lỗi khi tải thông tin sản phẩm.", ToastLevel.Error);
     }
     finally
-    {
+    {           
         infoLoading = false;
     }
 }
@@ -1046,3 +1057,4 @@ private void CloseInfoModal()
 }
 
 }
+

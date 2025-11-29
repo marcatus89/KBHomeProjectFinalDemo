@@ -156,22 +156,32 @@ else
                                 <small class="comment-meta">(@c.CreatedAt.ToLocalTime().ToString("g"))</small>
                             </div>
                             <div>
-                                <button class="btn btn-link btn-sm" @onclick="() => StartReply(c)">
-                                    <i class="bi bi-reply"></i> Trả lời
-                                </button>
+                                @if (!IsTicketClosed)
+                                {
+                                    <button class="btn btn-link btn-sm" @onclick="() => StartReply(c)">
+                                        <i class="bi bi-reply"></i> Trả lời
+                                    </button>
+                                }
                             </div>
                         </div>
 
                         @if (c.ReplyToComment != null)
                         {
-                            <div class="quoted-box mt-2 quoted-clickable" @onclick="() => ScrollToComment(c.ReplyToComment.Id)"
-                                title="Nhấn để xem bình luận gốc">
-                                <small class="text-muted">Trả lời <strong>@c.ReplyToComment.Author?.UserName</strong>:</small>
-                                <div class="mt-1 comment-content">@((MarkupString)HtmlQuoteShort(c.ReplyToComment.Content))</div>
+                            <div class="quoted-box mt-2 quoted-clickable"
+                                 @onclick="() => ScrollToComment(c.ReplyToComment.Id)"
+                                 title="Nhấn để xem bình luận gốc">
+                                <small class="text-muted">
+                                    Trả lời <strong>@c.ReplyToComment.Author?.UserName</strong>:
+                                </small>
+                                <div class="mt-1 comment-content">
+                                    @((MarkupString)HtmlQuoteShort(c.ReplyToComment.Content))
+                                </div>
                             </div>
                         }
 
-                        <div class="mt-2 comment-content">@((MarkupString)HighlightMentions(c.Content))</div>
+                        <div class="mt-2 comment-content">
+                            @((MarkupString)HighlightMentions(c.Content))
+                        </div>
 
                         @if (c.Attachments != null && c.Attachments.Any())
                         {
@@ -181,15 +191,22 @@ else
                                     <li>
                                         @if (IsImageFile(file.FileName))
                                         {
-                                            <img src="@file.FilePath" alt="@file.FileName" @onclick="() => ShowImagePreviewAsync(file.FilePath)"
-                                                style="max-width:200px; cursor:pointer;" class="rounded shadow-sm" />
+                                            <img src="@file.FilePath"
+                                                 alt="@file.FileName"
+                                                 @onclick="() => ShowImagePreviewAsync(file.FilePath)"
+                                                 style="max-width:200px; cursor:pointer;"
+                                                 class="rounded shadow-sm" />
                                         }
                                         else
                                         {
                                             <a href="javascript:void(0)"
-                                                @onclick="() => ShowFilePreviewAsync(file.FilePath, file.FileName)">@file.FileName</a>
+                                               @onclick="() => ShowFilePreviewAsync(file.FilePath, file.FileName)">
+                                                @file.FileName
+                                            </a>
                                         }
-                                        <small class="text-muted ms-2">(@file.UploadedAt.ToLocalTime().ToString("g"))</small>
+                                        <small class="text-muted ms-2">
+                                            (@file.UploadedAt.ToLocalTime().ToString("g"))
+                                        </small>
                                     </li>
                                 }
                             </ul>
@@ -204,63 +221,82 @@ else
 
             <hr />
 
-            @* Reply preview *@
-            @if (replyToComment != null)
+            @if (IsTicketClosed)
             {
-                <div class="mb-2">
-                    <div class="d-flex justify-content-between align-items-start quoted-preview">
-                        <div>
-                            <small class="text-muted">Trả lời <strong>@replyToComment.Author?.UserName</strong>:</small>
-                            <div class="mt-1"><small class="text-muted">@((MarkupString)HtmlQuoteShort(replyToComment.Content))</small></div>
-                        </div>
-                        <div>
-                            <button class="btn btn-sm btn-outline-secondary" @onclick="CancelReply">Hủy</button>
-                        </div>
-                    </div>
+                <div class="alert alert-info mt-2">
+                    Ticket này đã Closed. Bạn không thể thêm bình luận hoặc tệp đính kèm mới.
                 </div>
             }
+            else
+            {
+                @* Reply preview *@
+                @if (replyToComment != null)
+                {
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-start quoted-preview">
+                            <div>
+                                <small class="text-muted">
+                                    Trả lời <strong>@replyToComment.Author?.UserName</strong>:
+                                </small>
+                                <div class="mt-1">
+                                    <small class="text-muted">
+                                        @((MarkupString)HtmlQuoteShort(replyToComment.Content))
+                                    </small>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="CancelReply">Hủy</button>
+                            </div>
+                        </div>
+                    </div>
+                }
 
-            <EditForm Model="@newComment" OnValidSubmit="HandleCommentSubmit">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
+                <EditForm Model="@newComment" OnValidSubmit="HandleCommentSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
 
-                <div class="position-relative mb-2">
-                    <InputTextArea @bind-Value="newComment.Content" class="form-control" rows="3"
-                        placeholder="@("Nhập nội dung, có thể gõ @ để tag tài khoản...")" @oninput="HandleTagInput">
-                    </InputTextArea>
+                    <div class="position-relative mb-2">
+                        <InputTextArea @bind-Value="newComment.Content"
+                                       class="form-control"
+                                       rows="3"
+                                       placeholder="@("Nhập nội dung, có thể gõ @ để tag tài khoản...")"
+                                       @oninput="HandleTagInput">
+                        </InputTextArea>
 
-                    @if (showSuggestions && filteredUsers.Any())
-                    {
-                        <ul class="list-group position-absolute bg-white border shadow-sm"
-                            style="z-index:999; top:100%; left:0; right:0;">
-                            @foreach (var user in filteredUsers)
-                            {
-                                <li class="list-group-item list-group-item-action" @onclick="() => SelectUserTag(user)">
-                                    <strong>@user.UserName</strong><br />
-                                    <small class="text-muted">@user.Email</small>
-                                </li>
-                            }
-                        </ul>
-                    }
-                </div>
+                        @if (showSuggestions && filteredUsers.Any())
+                        {
+                            <ul class="list-group position-absolute bg-white border shadow-sm"
+                                style="z-index:999; top:100%; left:0; right:0;">
+                                @foreach (var user in filteredUsers)
+                                {
+                                    <li class="list-group-item list-group-item-action"
+                                        @onclick="() => SelectUserTag(user)">
+                                        <strong>@user.UserName</strong><br />
+                                        <small class="text-muted">@user.Email</small>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
 
-                <div class="mb-2">
-                    <InputFile OnChange="HandleFileSelection" multiple class="form-control" />
-                    @if (selectedFiles?.Count > 0)
-                    {
-                        <ul class="small text-muted mt-1">
-                            @foreach (var f in selectedFiles)
-                            {
-                                <li>@f.Name (@(f.Size / 1024) KB)</li>
-                            }
-                        </ul>
-                    }
-                </div>
+                    <div class="mb-2">
+                        <InputFile OnChange="HandleFileSelection" multiple class="form-control" />
+                        @if (selectedFiles?.Count > 0)
+                        {
+                            <ul class="small text-muted mt-1">
+                                @foreach (var f in selectedFiles)
+                                {
+                                    <li>@f.Name (@(f.Size / 1024) KB)</li>
+                                }
+                            </ul>
+                        }
+                    </div>
 
-                <button type="submit" class="btn btn-primary mt-2">
-                    <i class="bi bi-send"></i> Gửi bình luận
-                </button>
-            </EditForm>
+                    <button type="submit" class="btn btn-primary mt-2">
+                        <i class="bi bi-send"></i> Gửi bình luận
+                    </button>
+                </EditForm>
+            }
         </div>
     </div>
 
@@ -351,6 +387,10 @@ else
 
     // DotNet reference for JS callbacks
     private DotNetObjectReference<object>? dotNetRef;
+
+    // Ticket Closed?
+    private bool IsTicketClosed =>
+        ticket?.Status == TicketStatus.Closed;
 
     protected override async Task OnInitializedAsync()
     {
@@ -616,7 +656,7 @@ else
         }
     }
 
-    // ---------- comment submit & watchers (unchanged) ----------
+    // ---------- comment submit & watchers ----------
     private IEnumerable<string> ExtractMentionedUsernames(string content)
     {
         if (string.IsNullOrWhiteSpace(content)) return Enumerable.Empty<string>();
@@ -628,6 +668,12 @@ else
 
     private async Task HandleCommentSubmit()
     {
+        // Không cho comment nếu ticket đã Closed
+        if (ticket == null || ticket.Status == TicketStatus.Closed)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(newComment.Content) && selectedFiles.Count == 0)
             return;
 
@@ -667,7 +713,7 @@ else
 
         await db.SaveChangesAsync();
 
-        // Build watchers and mark unread (same logic như trước)
+        // Build watchers and mark unread
         var watcherIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var ticketEntity = await db.Tickets.AsNoTracking().FirstOrDefaultAsync(t => t.Id == Id);

@@ -17,3 +17,6 @@ export function disposeCarousel(selector) {
         delete element._carouselInstance;
     }
 }
+
+
+
